@@ -7,7 +7,9 @@ This simple API is build with FastApi on Python with Docker.
 > In the implementation app will create a local SQL DB.  
 
 ```
+# You can
 docker build -t occ_api_image .
+
 docker run -d --name occ_api_container -p 80:80 occ_api_image
 ```
 

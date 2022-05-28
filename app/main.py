@@ -4,6 +4,7 @@ from fastapi import FastAPI, Depends
 from typing import Dict, Any, List, Union
 from starlette.requests import Request
 
+from app.global_vars import CURRENT_VERSION
 from app.models import *
 from app.database import SessionLocal, engine
 from app.utils import count_occurrences
@@ -24,9 +25,12 @@ def get_db() -> Session:
         db.close()
 
 
-@app.post('/api/events/')
-async def post_events(request: Request, db: Session = Depends(get_db)) -> Dict[str, Any]:
+@app.post('/api/{version}/events/')
+async def post_events(request: Request, version: str = CURRENT_VERSION, db: Session = Depends(get_db)) -> Dict[str, Any]:
     """ Receive a sentence (String) in the request and counts the number of the occurrences of specific keywords """
+
+    if version != CURRENT_VERSION:
+        raise Exception('Invalid version')
 
     request_body: bytes = await request.body()
     sentence: str = request_body.decode("utf-8")
@@ -39,9 +43,12 @@ async def post_events(request: Request, db: Session = Depends(get_db)) -> Dict[s
     return {'sentence': sentence, 'occurrences': occurrences}
 
 
-@app.get('/api/stats/')
-def get_stats(interval: int, db: Session = Depends(get_db)) -> Dict[str, int]:
+@app.get('/api/{version}/stats/')
+def get_stats(interval: int, version: str = CURRENT_VERSION, db: Session = Depends(get_db)) -> Dict[str, int]:
     """ Return a JSON with the number of occurrence of the above keywords in the received interval time """
+
+    if version != CURRENT_VERSION:
+        raise Exception('Invalid version')
 
     date_time: datetime = datetime.now() - timedelta(seconds=interval)
     grouped_occurrences: List[List[Union[str, int]]] = Occurrence.get_occurrences(db=db, date_time=date_time)
